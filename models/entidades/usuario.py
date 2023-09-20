@@ -1,8 +1,10 @@
-from models.baseDeDatos import BaseDeDatos  
+from models.baseDeDatos import BaseDeDatos
+
+import hashlib  
 
 class Usuario:
     def __init__(self, nombre:str, apellido:str, alias:str, correo:str,
-                 password:str, tipo_estado = 1, codigo_verificacion:str = None, id_usuario:int = None):
+                 password:str, tipo_estado = 3, codigo_verificacion:str = None, id_usuario:int = None):
         self.nombre = nombre
         self.apellido = apellido
         self.alias = alias
@@ -14,9 +16,10 @@ class Usuario:
     
     @classmethod
     def crear_usuario(cls, usuario):
-        consulta = """INSERT INTO mootmate.usuario
-        (nombre, apellido, alias, email, password, codigo_verificacion)
+        consulta = """INSERT INTO mootmate.usuarios
+        (nombre, apellido, alias, correo, password, id_tipo_estado, codigo_verificacion)
         values (%s,%s,%s,%s,%s,%s,%s)"""
+        #suponemos que el id de estado para conectado es 3
         parametros = (  usuario.nombre,
                         usuario.apellido,
                         usuario.alias,
@@ -26,6 +29,18 @@ class Usuario:
                         usuario.codigo_verificacion)
         BaseDeDatos.ejecutar_consulta(consulta, parametros)
     
+    @classmethod
+    def verificar_usuario(cls, id_usuario):
+        consulta = """UPDATE mootmate.usuarios as u SET u.verificado = 1, u.codigo_verificacion = NULL WHERE u.id_usuario = %s"""
+        BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=id_usuario)
+    
+    @classmethod
+    def get_cod_verificacion(cls, id_usuario):
+        consulta = """SELECT u.codigo_verificacion FROM mootmate.usuarios as u
+        WHERE u.id_usuario = %s"""
+        respuesta = BaseDeDatos.traer_uno(consulta=consulta, parametros=id_usuario)
+        return respuesta[0]
+
     @classmethod
     def get_usuario(cls, id_usuario:int):
         consulta = """SELECT * FROM mootmate.usuarios as u
@@ -63,7 +78,7 @@ class Usuario:
             consulta = """SELECT * FROM mootmate.tipo_estado as t_e WHERE t_e.id_tipo_estado = %s"""
             tipo_estado = BaseDeDatos.traer_uno(consulta=consulta, parametros=id_estado, diccionario=True)
             usuario["Estado"] = tipo_estado
-            usuarios.append[usuario]
+            usuarios.append(usuario)
         return usuarios
     
     @classmethod
@@ -125,6 +140,13 @@ class Usuario:
         if tipo_estado[0] == "eliminado":
             respuesta = True
         return respuesta
+    
+    @classmethod
+    def create_password(cls, password):
+        halg = hashlib.sha256()
+        halg.update(password.encode('utf-8'))
+        hash_password = halg.hexdigest()
+        return hash_password
         
     def serealizar_usuario(self):
         serial = {"nombre": self.nombre,
