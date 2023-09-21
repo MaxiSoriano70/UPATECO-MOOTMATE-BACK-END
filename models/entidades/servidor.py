@@ -2,7 +2,7 @@ from models.baseDeDatos import BaseDeDatos
 from models.entidades.usuario import Usuario
 
 class Servidor:
-    def __init__(self, nombre:str, descripcion:str, id_usuario_creador:int, id_servidor:int = None):
+    def __init__(self, nombre:str, descripcion:str, id_usuario_creador:int=None, id_servidor:int = None):
         self.nombre = nombre
         self.descripcion = descripcion
         self.id_usuario_creador = id_usuario_creador
@@ -15,17 +15,16 @@ class Servidor:
         parametros = (servidor.nombre, servidor.descripcion)
         cursor = BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=parametros)
         servidor.id_servidor = cursor.lastrowid
+        
         consulta = """INSERT INTO mootmate.usuarios_servidores
-        (id_usuario, id_servidor, id_privilegio_usuario)
+        (id_usuario, id_servidor, privilegio_usuario)
         values (%s,%s,%s)"""
-        #por defecto diremos que 1 = Admin como ejemplo pero esto se debe definir a la hora
-        #de cargar los distintos tipos de privilegios
-        parametros = (servidor.id_usuario_creador, servidor.id_servidor, 1)
+        parametros = (servidor.id_usuario_creador, servidor.id_servidor, "administrador")
         BaseDeDatos.ejecutar_consulta(consulta=consulta,parametros=parametros)
 
     @classmethod
     def get_servidor(cls, id_servidor:int ):
-        consulta = """SELECT * FROM mootmate.servidor as u WHERE u.id_servidor = %s"""
+        consulta = """SELECT * FROM mootmate.servidores as u WHERE u.id_servidor = %s"""
         return BaseDeDatos.traer_uno(consulta=consulta, parametros=id_servidor, diccionario=True)
         
     @classmethod
@@ -53,7 +52,7 @@ class Servidor:
     
     @classmethod
     def editar_servidor(cls, nuevo):
-        consulta = """UPDATE FROM mootmate.servidores as s SET
+        consulta = """UPDATE mootmate.servidores as s SET
         s.nombre = %s,
         s.descripcion = %s
         WHERE s.id_servidor = %s"""
@@ -62,19 +61,16 @@ class Servidor:
 
     @classmethod
     def eliminar_servidor(cls, id_servidor:int):
-        consulta = """DELETE FROM mootmate.servidor as s WHERE s.id_servidor = %s"""
+        consulta = """DELETE FROM mootmate.usuarios_servidores as u_s WHERE u_s.id_servidor = %s"""
         BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=id_servidor)
-        consulta = """DELETE FROM mootmate.usuarios_servidores as u_s WHERE u_s.id_server = %s"""
+        consulta = """DELETE FROM mootmate.servidores as s WHERE s.id_servidor = %s"""
         BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=id_servidor)
 
     @classmethod
     def existe_servidor(cls, id_servidor:int):
         consulta = """SELECT s.id_servidor FROM mootmate.servidores as s WHERE s.id_servidor = %s"""
         respuesta = BaseDeDatos.traer_uno(consulta=consulta, parametros=id_servidor)
-        if respuesta != None:
-            return True
-        else:
-            return False
+        return respuesta != None
     
     @classmethod
     def existe_usuario_servidor(cls, id_servidor, id_usuario):
@@ -95,4 +91,4 @@ class Servidor:
     def serealizar_servidor(self):
         diccionario = {"nombre":self.nombre, "descripcion":self.descripcion, "id_usuario_creador":self.id_usuario_creador}
         return diccionario
-    
+

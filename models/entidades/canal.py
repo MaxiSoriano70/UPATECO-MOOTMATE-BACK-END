@@ -1,7 +1,7 @@
 from models.baseDeDatos import BaseDeDatos  
 
 class Canal:
-    def __init__(self, nombre, descripcion, id_servidor, id_canal):
+    def __init__(self, nombre, descripcion, id_servidor, id_canal=None):
         self.nombre = nombre
         self.descripcion = descripcion
         self.id_servidor = id_servidor
