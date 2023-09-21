@@ -78,3 +78,19 @@ class UsuarioNoEncontrado(HTTPException):
         })
         response.status_code = self.status_code
         return response
+
+class MensajeNoEncontrado(HTTPException):
+    def __init__(self, description = "No se encontro el mensaje en la base de datos."):
+        super().__init__(description)
+        self.status_code = 500
+
+    def get_response(self):
+        response = jsonify({
+            "error":{
+                "name":"MensajeNoEncontrado",
+                "code":self.code,
+                "description":self.description
+            }
+        })
+        response.status_code = self.status_code
+        return response

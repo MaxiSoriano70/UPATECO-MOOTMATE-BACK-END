@@ -31,13 +31,51 @@ class BaseDeDatos:
                     cursor.execute(consulta, (parametros, ))
             except TypeError:
                 cursor.execute(consulta, (str(parametros), ))
+        else:
+            cursor.execute(consulta)
+        cls._coneccion.commit()
         return cursor
     
     @classmethod
     def traer_uno(cls, consulta, parametros=None, formato=None, diccionario = False):
-        cursor = cls.ejecutar_consulta(consulta, parametros, formato, diccionario)
+        cursor = cls.conectarse().cursor(dictionary=diccionario)
+        if parametros != None:
+            try:
+                iter(parametros)
+                if not(isinstance(parametros,str)):
+                    if isinstance(parametros, datetime):
+                        try:
+                            cursor.execute(consulta, parametros.strftime(formato))
+                        except:
+                            cursor.execute(consulta, parametros.strftime("%Y-%m-%d"))
+                    else:
+                        cursor.execute(consulta, parametros)
+                else:
+                    cursor.execute(consulta, (parametros, ))
+            except TypeError:
+                cursor.execute(consulta, (str(parametros), ))
+        else:
+            cursor.execute(consulta)
         return cursor.fetchone()
     
-    def traer_todo(cls, consulta, parametros, formato=None, diccionario = False):
-        cursor = cls.ejecutar_consulta(consulta, parametros, formato, diccionario)
+    @classmethod
+    def traer_todo(cls, consulta, parametros = None, formato=None, diccionario = False):
+        cursor = cls.conectarse().cursor(dictionary=diccionario)
+        if parametros != None:
+            try:
+                iter(parametros)
+                if not(isinstance(parametros,str)):
+                    if isinstance(parametros, datetime):
+                        try:
+                            cursor.execute(consulta, parametros.strftime(formato))
+                        except:
+                            cursor.execute(consulta, parametros.strftime("%Y-%m-%d"))
+                    else:
+                        cursor.execute(consulta, parametros)
+                else:
+                    cursor.execute(consulta, (parametros, ))
+            except TypeError:
+                cursor.execute(consulta, (str(parametros), ))
+        else:
+            cursor.execute(consulta)
         return cursor.fetchall()

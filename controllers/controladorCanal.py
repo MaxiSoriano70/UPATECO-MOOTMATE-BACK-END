@@ -13,7 +13,7 @@ import re
 
 class ControladorCanal:
     @classmethod
-    def create_actor(cls):
+    def crear_canal(cls):
         datos = request.json
 
         cls.control_errores(datos)
