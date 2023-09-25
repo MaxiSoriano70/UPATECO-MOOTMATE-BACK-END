@@ -9,7 +9,6 @@ from models.exceptions import UsuarioNoEncontrado
 from models.exceptions import ServidorNoEncontrado
 from models.exceptions import BadRequest
 
-from controllers.controladorUsuario import ControladorUsuario
 
 class ControladorServidor:
     @classmethod
