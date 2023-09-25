@@ -31,7 +31,6 @@ class ControladorServidor:
         #control usuario creador
         if "id_usuario" not in datos:
             raise BadRequest("El id del usuario creador del servidor es obligatoria.")
-        ControladorUsuario.control_existe_usuario(id_usuario=datos.get("id_usuario"))
         
         datos = request.json
         servidor = Servidor(nombre = datos.get("nombre", ""),
@@ -40,6 +39,7 @@ class ControladorServidor:
                             )
         try:
             Servidor.crear_servidor(servidor)
+            ControladorUsuario.control_existe_usuario(id_usuario=datos.get("id_usuario"))
         except mysqlErrors as error:
             raise DataBaseError(f"Se produjo un error al intentar insertar un nuevo servidor en la base de datos {error}")
         return {"Mensaje":"Se Creo el servidor con exito."}, 201
@@ -108,9 +108,9 @@ class ControladorServidor:
     @classmethod
     def eliminar_usuario(cls, id_servidor:int, id_usuario:int):
         cls.control_existe_servidor(id_servidor)
-        ControladorUsuario.control_existe_usuario(id_usuario)
 
         try:
+            ControladorUsuario.control_existe_usuario(id_usuario)
             Servidor.eliminar_usuario(id_servidor,id_usuario)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error en la base de datos al intentar eliminar al usuario con id={} del servidor con id={}. {}".format(id_usuario,id_servidor,error))

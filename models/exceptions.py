@@ -1,6 +1,11 @@
 from werkzeug.exceptions import HTTPException
 from flask import jsonify
 
+from models.entidades.canal import Canal
+from models.entidades.usuario import Usuario
+from models.entidades.mensaje import Mensaje
+from models.entidades.servidor import Servidor
+
 class BadRequest(HTTPException):
     def __init__(self, description = "Solicitud incorrecta"):
         super().__init__(description)
@@ -46,6 +51,10 @@ class CanalNoEncontrado(HTTPException):
         })
         response.status_code = self.status_code
         return response
+    
+    @classmethod
+    def existe_canal(cls, id_canal):
+        return Canal.existe_canal(id_canal)
 
 class ServidorNoEncontrado(HTTPException):
     def __init__(self, description = "No se encontro el servidor en la base de datos."):
@@ -62,6 +71,9 @@ class ServidorNoEncontrado(HTTPException):
         })
         response.status_code = self.status_code
         return response
+    @classmethod
+    def existe_servidor(cls, id_servidor):
+        return Servidor.existe_servidor(id_servidor)
 
 class UsuarioNoEncontrado(HTTPException):
     def __init__(self, description = "No se encontro el usuario en la base de datos."):
@@ -78,6 +90,10 @@ class UsuarioNoEncontrado(HTTPException):
         })
         response.status_code = self.status_code
         return response
+    
+    @classmethod
+    def existe_usuario(cls, id_usuario):
+        return Usuario.existe_usuario(id_usuario)
 
 class MensajeNoEncontrado(HTTPException):
     def __init__(self, description = "No se encontro el mensaje en la base de datos."):
@@ -94,3 +110,7 @@ class MensajeNoEncontrado(HTTPException):
         })
         response.status_code = self.status_code
         return response
+    
+    @classmethod
+    def existe_mensaje(cls, id_mensaje):
+        return Mensaje.existe_mensaje(id_mensaje)

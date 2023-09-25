@@ -11,8 +11,6 @@ from models.exceptions import UsuarioNoEncontrado
 from models.exceptions import ServidorNoEncontrado
 from models.exceptions import BadRequest
 
-from controllers.controladorServidor import ControladorServidor
-
 class ControladorUsuario:
     @classmethod
     def crear_usuario(cls):
@@ -84,10 +82,10 @@ class ControladorUsuario:
     @classmethod
     def get_privilegio(cls, id_usuario, id_servidor):
         cls.control_existe_usuario(id_usuario)
-        ControladorServidor.control_existe_servidor(id_servidor)
 
         try:
             respuesta = Usuario.get_privilegio(id_usuario, id_servidor)
+            ServidorNoEncontrado.existe_servidor(id_servidor)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al cargar los privilegios del usuario con id={} en el servidor con id={} de la base de datos. {}".format(id_usuario, id_servidor, error))
         return respuesta, 200
@@ -186,8 +184,8 @@ class ControladorUsuario:
     @classmethod
     def agregar_servidor(cls, id_usuario, id_servidor):
         cls.control_existe_usuario(id_usuario)
-        ControladorServidor.control_existe_servidor(id_servidor)
         try:
+            ServidorNoEncontrado.existe_servidor(id_servidor)
             Usuario.agregar_servidor(id_usuario,id_servidor)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error en la base de datos, al intentar unir al usuario con id={} al servidor con id={}. {}".format(id_usuario, id_servidor, error))
