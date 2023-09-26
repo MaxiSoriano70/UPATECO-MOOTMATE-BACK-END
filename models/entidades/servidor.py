@@ -26,6 +26,13 @@ class Servidor:
     def get_servidor(cls, id_servidor:int ):
         consulta = """SELECT * FROM mootmate.servidores as u WHERE u.id_servidor = %s"""
         return BaseDeDatos.traer_uno(consulta=consulta, parametros=id_servidor, diccionario=True)
+    
+    @classmethod
+    def get_servidores(cls):
+        consulta = """SELECT * FROM mootmate.servidores"""
+        datos = BaseDeDatos.traer_todo(consulta=consulta,diccionario=True)
+        respuesta = {"servidores":datos}
+        return respuesta
         
     @classmethod
     def get_usuario_creador(cls, id_servidor):

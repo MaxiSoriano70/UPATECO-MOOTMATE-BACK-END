@@ -10,6 +10,7 @@ from models.exceptions import DataBaseError
 from models.exceptions import UsuarioNoEncontrado
 from models.exceptions import ServidorNoEncontrado
 from models.exceptions import BadRequest
+#from werkzeug.exceptions import BadRequest
 
 class ControladorUsuario:
     @classmethod
@@ -139,6 +140,12 @@ class ControladorUsuario:
             estados = ("conectado", "desconectado", "ausente", "no_molestar", "eliminado")
             if datos.get("estado") not in estados:
                 raise BadRequest("Solo se permite uno de los siguientes estados {}".format(estados))
+        
+        #contro id_usuario:
+        if "id_usuario" not in datos:
+            raise BadRequest("El id_usuario es obligatorio")
+        else:
+            cls.control_existe_usuario(datos.get("id_usuario"))
             
         #control de correo
         if "correo" in datos:
@@ -185,7 +192,9 @@ class ControladorUsuario:
     def agregar_servidor(cls, id_usuario, id_servidor):
         cls.control_existe_usuario(id_usuario)
         try:
-            ServidorNoEncontrado.existe_servidor(id_servidor)
+            if not ServidorNoEncontrado.existe_servidor(id_servidor):
+                return {"mensaje":"Se agrego con exito al usuario con id={} al servidor con id={}.".format(id_usuario,id_servidor)}
+                raise ServidorNoEncontrado("Servidor no encontrado")
             Usuario.agregar_servidor(id_usuario,id_servidor)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error en la base de datos, al intentar unir al usuario con id={} al servidor con id={}. {}".format(id_usuario, id_servidor, error))
@@ -207,6 +216,6 @@ class ControladorUsuario:
     def control_existe_usuario(cls, id_usuario):
         try:
             if not(Usuario.existe_usuario(id_usuario)):
-                raise UsuarioNoEncontrado("El usuario con id={} no se encontro en la base de datos.".format(id_usuario))            
+                raise UsuarioNoEncontrado(description="El usuario con id={} no se encontro en la base de datos.".format(id_usuario))
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al en la base de datos al intetar obtener datos del usuario. {}".format(error))

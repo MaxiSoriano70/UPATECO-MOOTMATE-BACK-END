@@ -9,6 +9,7 @@ from models.exceptions import UsuarioNoEncontrado
 from models.exceptions import ServidorNoEncontrado
 from models.exceptions import BadRequest
 
+from controllers.controladorUsuario import ControladorUsuario
 
 class ControladorServidor:
     @classmethod
@@ -52,6 +53,14 @@ class ControladorServidor:
         except mysqlErrors as error:
             raise DataBaseError(f"Se prodojo un error en la base de datos al intentar cargar los datos del servidor, con id:{id_servidor}. {error}")
         return respuesta, 200
+    
+    @classmethod
+    def get_servidores(cls):
+        try:
+            respuesta = Servidor.get_servidores()
+        except mysqlErrors as error:
+            raise DataBaseError("Se produjo un error al cargar todos los servidores de la base de datos.")
+        return respuesta, 200
         
     @classmethod
     def get_usuario_creador(cls, id_servidor):
@@ -84,6 +93,24 @@ class ControladorServidor:
     @classmethod
     def editar_servidor(cls):
         datos = request.json
+        
+        #control nombre servidor
+        if "nombre" in datos:
+            if len(datos.get("nombre"))<3:
+                raise BadRequest("El nombre del servidor debe tener almenos 4 caracteres.")
+            if len(datos.get("nombre"))>20:
+                raise BadRequest("El nombre del servidor debe tener un maximo de 20 carateres.")
+        
+        #control descripcion servidor
+        if "descripcion" in datos:
+            if len(datos.get("descripcion"))>100:
+                raise BadRequest("La descripcion del servidor debe tener un maximo de 20 carateres.")
+        
+        #control usuario creador
+        if "id_servidor" not in datos:
+            raise BadRequest("El id del usuario creador del servidor es obligatoria.")
+        else:
+            cls.control_existe_servidor(datos.get("id_servidor"))
         nuevo = Servidor(nombre = datos.get("nombre", ""),
                          descripcion = datos.get("descripcion", ""),
                          id_servidor = datos.get("id_servidor", "")
@@ -92,7 +119,7 @@ class ControladorServidor:
             Servidor.editar_servidor(nuevo)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al momento de editar el servidor con id:{} en la base de datos.{}".format(nuevo.id_servidor, error))
-        return {"mensaje":"Se modifico con exito el canal con id:{}.".format(nuevo.id_servidor)}, 200
+        return {"mensaje":"Se modifico con exito el servidor con id:{}.".format(nuevo.id_servidor)}, 200
 
     @classmethod
     def eliminar_servidor(cls, id_servidor:int):
