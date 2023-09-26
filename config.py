@@ -1,12 +1,12 @@
 class Config:
 
     _credenciales = {
-        "user":"max22",
-        "password":"L0rD25sg",
-        "port":"3306",
-        "database":"mootmate",
-        "host":"127.0.0.1"
-    }
+                    "host":"127.0.0.1",
+                    "port":"3306",
+                    "user":"root",
+                    "password":"ACL&cag20",
+                    "database":"mootmate"
+                    }
     
     SERVER_NAME = "127.0.0.1:5000"
 

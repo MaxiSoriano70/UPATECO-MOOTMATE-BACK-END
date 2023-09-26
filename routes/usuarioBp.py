@@ -9,7 +9,7 @@ usuario_bp.route('/usuarios/', methods = ['POST'])(ControladorUsuario.crear_usua
 #GETS
 usuario_bp.route('/usuarios/', methods = ['GET'])(ControladorUsuario.get_usuarios)
 usuario_bp.route('/usuarios/<int:id_usuario>', methods = ['GET'])(ControladorUsuario.get_usuario)
-usuario_bp.route('/usuarios/<int:id_usuario>/servidores', methods = ['GET'])(ControladorUsuario.get_servidores)
+usuario_bp.route('/usuarios/<int:id_usuario>/servidores/', methods = ['GET'])(ControladorUsuario.get_servidores)
 usuario_bp.route('/usuarios/<int:id_usuario>/servidores/<int:id_servidor>', methods = ['GET'])(ControladorUsuario.get_privilegio)
 #PUTS
 usuario_bp.route('/usuarios/', methods = ['PUT'])(ControladorUsuario.actualizar_usuario)
