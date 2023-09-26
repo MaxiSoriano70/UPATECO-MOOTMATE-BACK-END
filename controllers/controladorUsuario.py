@@ -19,9 +19,9 @@ class ControladorUsuario:
         #control de errores nombre
         if "nombre" not in datos:
             raise BadRequest("El nombre del usuario es obligatorio.")
-        if datos.get("nombre")<2:
+        if len(datos.get("nombre"))<2:
             raise BadRequest("El nombre de usuario tiene que tener almenos 2 caracteres.")
-        if datos.get("nombre")>30:
+        if len(datos.get("nombre"))>30:
             raise BadRequest("El nombre del usuario tiene que tener un maximo de 30 caracteres.")
         patron = r"^[a-zA-Z]+$"
         if not(re.match(patron, datos.get("nombre"))):
@@ -29,9 +29,9 @@ class ControladorUsuario:
         #control de errores apellido
         if "apellido" not in datos:
             raise BadRequest("El apellido del usuario es obligatorio.")
-        if datos.get("apellido")<2:
+        if len(datos.get("apellido"))<2:
             raise BadRequest("El apellido de usuario tiene que tener almenos 2 caracteres.")
-        if datos.get("apellido")>30:
+        if len(datos.get("apellido"))>30:
             raise BadRequest("El apellido del usuario tiene que tener un maximo de 30 caracteres.")
         if not(re.match(patron, datos.get("apellido"))):
             raise BadRequest("El apellido de usuario tiene que tener solo letras.")
