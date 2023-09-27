@@ -26,6 +26,7 @@ class ControladorUsuario:
         patron = r"^[a-zA-Z]+$"
         if not(re.match(patron, datos.get("nombre"))):
             raise BadRequest("El nombre de usuario tiene que tener solo letras.")
+        
         #control de errores apellido
         if "apellido" not in datos:
             raise BadRequest("El apellido del usuario es obligatorio.")
@@ -35,23 +36,37 @@ class ControladorUsuario:
             raise BadRequest("El apellido del usuario tiene que tener un maximo de 30 caracteres.")
         if not(re.match(patron, datos.get("apellido"))):
             raise BadRequest("El apellido de usuario tiene que tener solo letras.")
+        
         #control de correo
         patron = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         if "correo" not in datos:
             raise BadRequest("El correo de usuario es obligatorio.")
         if not(re.match(patron, datos.get("correo"))):
             raise BadRequest("El correo {} no es valido".format(datos.get("correo")))
+        
         #control contraseña:
         patron = r'^(?=.*[A-Za-z0-9!@#$%^&*()_+])[A-Za-z0-9!@#$%^&*()_+]{8,}$'
         if "password" not in datos:
             raise BadRequest("La cotraseña es obligatoria.")
         if not(re.match(patron, datos.get("password"))):
             raise BadRequest("La contraseña no cumple los requisitos necesarios.")
+        
+        #control alias
+        if "alias" not in datos:
+            raise BadRequest("El alias del usuario es obligatorio.")
+        if len(datos.get("alias"))<2:
+            raise BadRequest("El alias de usuario tiene que tener almenos 2 caracteres.")
+        if len(datos.get("nombre"))>30:
+            raise BadRequest("El alias del usuario tiene que tener un maximo de 30 caracteres.")
+        patron = r"^[a-zA-Z0-9]+$"
+        if not(re.match(patron, datos.get("alias"))):
+            raise BadRequest("El alias de usuario tiene que tener solo letras.")
 
         usuario = Usuario(nombre = datos.get("nombre", ""),
                           apellido = datos.get("apellido", ""),
                           correo = datos.get("correo", ""),
                           password = Usuario.create_password(datos.get("password","")),
+                          alias=datos.get("alias", ""),
                           codigo_verificacion = cls.crear_token()
                           )
         try:
