@@ -54,7 +54,9 @@ class Usuario:
         FROM usuarios as u INNER JOIN usuarios_servidores as u_s ON u.id_usuario = u_s.id_usuario
         INNER JOIN servidores as s ON u_s.id_servidor = s.id_servidor
         WHERE u.id_usuario = %s"""
-        return BaseDeDatos.traer_todo(consulta=consulta, parametros=id_usuario, diccionario=True)
+        datos = BaseDeDatos.traer_todo(consulta=consulta, parametros=id_usuario, diccionario=True)
+        respuesta = {"servidores":datos}
+        return respuesta
 
     @classmethod
     def get_privilegio(cls, id_usuario, id_servidor):

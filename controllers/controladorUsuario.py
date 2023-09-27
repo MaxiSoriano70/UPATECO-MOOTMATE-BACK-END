@@ -10,8 +10,7 @@ from models.exceptions import DataBaseError
 from models.exceptions import UsuarioNoEncontrado
 from models.exceptions import ServidorNoEncontrado
 from models.exceptions import BadRequest
-
-from controllers.controladorServidor import ControladorServidor
+#from werkzeug.exceptions import BadRequest
 
 class ControladorUsuario:
     @classmethod
@@ -20,39 +19,54 @@ class ControladorUsuario:
         #control de errores nombre
         if "nombre" not in datos:
             raise BadRequest("El nombre del usuario es obligatorio.")
-        if datos.get("nombre")<2:
+        if len(datos.get("nombre"))<2:
             raise BadRequest("El nombre de usuario tiene que tener almenos 2 caracteres.")
-        if datos.get("nombre")>30:
+        if len(datos.get("nombre"))>30:
             raise BadRequest("El nombre del usuario tiene que tener un maximo de 30 caracteres.")
         patron = r"^[a-zA-Z]+$"
         if not(re.match(patron, datos.get("nombre"))):
             raise BadRequest("El nombre de usuario tiene que tener solo letras.")
+        
         #control de errores apellido
         if "apellido" not in datos:
             raise BadRequest("El apellido del usuario es obligatorio.")
-        if datos.get("apellido")<2:
+        if len(datos.get("apellido"))<2:
             raise BadRequest("El apellido de usuario tiene que tener almenos 2 caracteres.")
-        if datos.get("apellido")>30:
+        if len(datos.get("apellido"))>30:
             raise BadRequest("El apellido del usuario tiene que tener un maximo de 30 caracteres.")
         if not(re.match(patron, datos.get("apellido"))):
             raise BadRequest("El apellido de usuario tiene que tener solo letras.")
+        
         #control de correo
         patron = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         if "correo" not in datos:
             raise BadRequest("El correo de usuario es obligatorio.")
         if not(re.match(patron, datos.get("correo"))):
             raise BadRequest("El correo {} no es valido".format(datos.get("correo")))
+        
         #control contraseña:
         patron = r'^(?=.*[A-Za-z0-9!@#$%^&*()_+])[A-Za-z0-9!@#$%^&*()_+]{8,}$'
         if "password" not in datos:
             raise BadRequest("La cotraseña es obligatoria.")
         if not(re.match(patron, datos.get("password"))):
             raise BadRequest("La contraseña no cumple los requisitos necesarios.")
+        
+        #control alias
+        if "alias" not in datos:
+            raise BadRequest("El alias del usuario es obligatorio.")
+        if len(datos.get("alias"))<2:
+            raise BadRequest("El alias de usuario tiene que tener almenos 2 caracteres.")
+        if len(datos.get("nombre"))>30:
+            raise BadRequest("El alias del usuario tiene que tener un maximo de 30 caracteres.")
+        patron = r"^[a-zA-Z0-9]+$"
+        if not(re.match(patron, datos.get("alias"))):
+            raise BadRequest("El alias de usuario tiene que tener solo letras.")
 
         usuario = Usuario(nombre = datos.get("nombre", ""),
                           apellido = datos.get("apellido", ""),
                           correo = datos.get("correo", ""),
                           password = Usuario.create_password(datos.get("password","")),
+                          alias=datos.get("alias", ""),
                           codigo_verificacion = cls.crear_token()
                           )
         try:
@@ -84,10 +98,10 @@ class ControladorUsuario:
     @classmethod
     def get_privilegio(cls, id_usuario, id_servidor):
         cls.control_existe_usuario(id_usuario)
-        ControladorServidor.control_existe_servidor(id_servidor)
 
         try:
             respuesta = Usuario.get_privilegio(id_usuario, id_servidor)
+            ServidorNoEncontrado.existe_servidor(id_servidor)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al cargar los privilegios del usuario con id={} en el servidor con id={} de la base de datos. {}".format(id_usuario, id_servidor, error))
         return respuesta, 200
@@ -141,6 +155,12 @@ class ControladorUsuario:
             estados = ("conectado", "desconectado", "ausente", "no_molestar", "eliminado")
             if datos.get("estado") not in estados:
                 raise BadRequest("Solo se permite uno de los siguientes estados {}".format(estados))
+        
+        #contro id_usuario:
+        if "id_usuario" not in datos:
+            raise BadRequest("El id_usuario es obligatorio")
+        else:
+            cls.control_existe_usuario(datos.get("id_usuario"))
             
         #control de correo
         if "correo" in datos:
@@ -186,8 +206,10 @@ class ControladorUsuario:
     @classmethod
     def agregar_servidor(cls, id_usuario, id_servidor):
         cls.control_existe_usuario(id_usuario)
-        ControladorServidor.control_existe_servidor(id_servidor)
         try:
+            if not ServidorNoEncontrado.existe_servidor(id_servidor):
+                return {"mensaje":"Se agrego con exito al usuario con id={} al servidor con id={}.".format(id_usuario,id_servidor)}
+                raise ServidorNoEncontrado("Servidor no encontrado")
             Usuario.agregar_servidor(id_usuario,id_servidor)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error en la base de datos, al intentar unir al usuario con id={} al servidor con id={}. {}".format(id_usuario, id_servidor, error))
@@ -209,6 +231,6 @@ class ControladorUsuario:
     def control_existe_usuario(cls, id_usuario):
         try:
             if not(Usuario.existe_usuario(id_usuario)):
-                raise UsuarioNoEncontrado("El usuario con id={} no se encontro en la base de datos.".format(id_usuario))            
+                raise UsuarioNoEncontrado(description="El usuario con id={} no se encontro en la base de datos.".format(id_usuario))
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al en la base de datos al intetar obtener datos del usuario. {}".format(error))

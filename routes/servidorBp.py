@@ -6,6 +6,7 @@ servidor_bp = Blueprint('servidor_bp',__name__)
 
 servidor_bp.route('/servidores/', methods = ['POST'])(ControladorServidor.crear_servidor)
 
+servidor_bp.route('/servidores/', methods = ['GET'])(ControladorServidor.get_servidores)
 servidor_bp.route('/servidores/<int:id_servidor>', methods = ['GET'])(ControladorServidor.get_servidor)
 servidor_bp.route('/servidores/<int:id_servidor>/creador/', methods = ['GET'])(ControladorServidor.get_usuario_creador)
 servidor_bp.route('/servidores/<int:id_servidor>/usuarios/', methods = ['GET'])(ControladorServidor.get_usuarios)
