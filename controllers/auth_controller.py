@@ -1,21 +1,28 @@
-from ..models.UsuarioModels import UsuarioModel
+from models.entidades.usuario import Usuario
 from flask import request, session, jsonify
 
 class UsuarioController:
     @classmethod
     def login(cls):
-        data = request.json
-        usuario = UsuarioModel(
-            alias = data.get('alias'),
-            contrasena = data.get('contrasena')
-        )
+        datos = request.json
+        usuario = Usuario(nombre = datos.get("nombre", ""),
+                          apellido = datos.get("apellido", ""),
+                          correo = datos.get("correo", ""),
+                          alias=datos.get("alias", ""),
+                          password = Usuario.create_password(datos.get("password","")),
+                          codigo_verificacion = datos.get("codigo_verificacion", "")
+                          )
+        if Usuario.existe_alias(usuario) == False:
+            return {"message": "Usuario no existe, por favor registrese"},401
         
-        if UsuarioModel.is_registered(usuario):
-            session['alias'] = data.get('alias')
+        if Usuario.is_registered(usuario):
+            session['alias'] = datos.get('alias')
            
             return {"message": "Sesion iniciadas"},200
         else:
-            return {"message": "Usuario o contraseña incorrectos"},401
+
+            return {"message": "Contraseña incorrecto"},401
+    
     
     @classmethod
     def logout(cls):
@@ -75,5 +82,5 @@ class UsuarioController:
             return result.serialize(), 200
     
         return jsonify({'message': 'id_usuario no existe'}), 404
-
+    
         

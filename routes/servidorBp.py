@@ -11,6 +11,7 @@ servidor_bp.route('/servidores/<int:id_servidor>', methods = ['GET'])(Controlado
 servidor_bp.route('/servidores/<int:id_servidor>/creador/', methods = ['GET'])(ControladorServidor.get_usuario_creador)
 servidor_bp.route('/servidores/<int:id_servidor>/usuarios/', methods = ['GET'])(ControladorServidor.get_usuarios)
 servidor_bp.route('/servidores/<int:id_servidor>/canales/', methods = ['GET'])(ControladorServidor.get_canales)
+servidor_bp.route('/servidores/<int:id_servidor>/<int:id_usuario>/', methods = ['GET'])(ControladorServidor.existe_usuario_servidor)
 
 servidor_bp.route('/servidores/', methods = ['PUT'])(ControladorServidor.editar_servidor)
 

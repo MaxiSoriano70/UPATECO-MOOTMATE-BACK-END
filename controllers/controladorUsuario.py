@@ -1,8 +1,9 @@
 from mysql.connector import Error as mysqlErrors
-from flask import request
+from flask import request, session, jsonify
+from config import Config
 import re
 import random
-
+import os
 from models.entidades.usuario import Usuario
 from models.entidades.servidor import Servidor
 
@@ -23,7 +24,7 @@ class ControladorUsuario:
             raise BadRequest("El nombre de usuario tiene que tener almenos 2 caracteres.")
         if len(datos.get("nombre"))>30:
             raise BadRequest("El nombre del usuario tiene que tener un maximo de 30 caracteres.")
-        patron = r"^[a-zA-Z]+$"
+        patron = r"^[A-Za-z]+(?: [A-Za-z]+)*$"
         if not(re.match(patron, datos.get("nombre"))):
             raise BadRequest("El nombre de usuario tiene que tener solo letras.")
         
@@ -69,6 +70,13 @@ class ControladorUsuario:
                           alias=datos.get("alias", ""),
                           codigo_verificacion = cls.crear_token()
                           )
+        
+        if Usuario.existe_correo(usuario):
+            raise BadRequest("El correo ya se encuetra registrado")
+        
+        if Usuario.existe_alias(usuario):
+            raise BadRequest("El ALias ya se encuetra registrado")
+        
         try:
             Usuario.crear_usuario(usuario)
         except mysqlErrors as error:
@@ -112,43 +120,45 @@ class ControladorUsuario:
             respuesta = Usuario.get_usuarios()
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al cargar todos los usuarios de la base de datos. {}".format(error))
-        return respuesta, 200
+        return {"usuarios":respuesta}, 200
     
     @classmethod
     def actualizar_usuario(cls):
         datos = request.json
-
         #control de errores nombre
         if "nombre" in datos:
-            patron = r"^[a-zA-Z]+$"
-            if datos.get("nombre")<2:
+            patron = r"^[A-Za-z]+(?: [A-Za-z]+)*$"
+            if len(datos.get("nombre"))<2:
                 raise BadRequest("El nombre de usuario tiene que tener almenos 2 caracteres.")
-            if datos.get("nombre")>30:
+            if len(datos.get("nombre"))>30:
                 raise BadRequest("El nombre del usuario tiene que tener un maximo de 30 caracteres.")
             if not(re.match(patron, datos.get("nombre"))):
                 raise BadRequest("El nombre de usuario tiene que tener solo letras.")
         #control de errores apellido
         if "apellido" in datos:
             patron = r"^[a-zA-Z]+$"            
-            if datos.get("apellido")<2:
+            if len(datos.get("apellido"))<2:
                 raise BadRequest("El apellido de usuario tiene que tener almenos 2 caracteres.")
-            if datos.get("apellido")>30:
+            if len(datos.get("apellido"))>30:
                 raise BadRequest("El apellido del usuario tiene que tener un maximo de 30 caracteres.")
             if not(re.match(patron, datos.get("apellido"))):
                 raise BadRequest("El apellido de usuario tiene que tener solo letras.")
         
         #control contraseña:
+        nuevopassword = ''
         if "password" in datos:
             patron = r'^(?=.*[A-Za-z0-9!@#$%^&*()_+])[A-Za-z0-9!@#$%^&*()_+]{8,}$'
             if not(re.match(patron, datos.get("password"))):
                 raise BadRequest("La contraseña no cumple los requisitos necesarios.")
-        
+            nuevopassword= datos.get('password')
+        if nuevopassword != '':
+            nuevopassword = Usuario.create_password(nuevopassword)
         #control alias:
-        if "alias" in datos:
+        """if "alias" in datos:
             if datos.get("alias") < 2:
                 raise BadRequest("El alias de usuario tiene que tener almenos 2 caracteres.")
             if datos.get("alias") > 30:
-                raise BadRequest("El alias del usuario tiene que tener un maximo de 30 caracteres.")
+                raise BadRequest("El alias del usuario tiene que tener un maximo de 30 caracteres.")"""
         
         #control de estado:
         if "estado" in datos:
@@ -157,10 +167,10 @@ class ControladorUsuario:
                 raise BadRequest("Solo se permite uno de los siguientes estados {}".format(estados))
         
         #contro id_usuario:
-        if "id_usuario" not in datos:
-            raise BadRequest("El id_usuario es obligatorio")
-        else:
-            cls.control_existe_usuario(datos.get("id_usuario"))
+        if "alias" not in datos:
+            raise BadRequest("El alias es obligatorio")
+        """else:
+            cls.control_existe_usuario(datos.get("id_usuario"))"""
             
         #control de correo
         if "correo" in datos:
@@ -172,8 +182,8 @@ class ControladorUsuario:
                             apellido = datos.get("apellido", ""),
                             alias = datos.get("alias", ""),
                             correo = datos.get("correo", ""),
-                            password = datos.get("password", ""),
-                            estado = datos.get("estado", ""),
+                            password = nuevopassword,
+                            estado = datos.get("estado", "Conectado"),
                             codigo_verificacion = cls.crear_token(),
                             id_usuario = datos.get("id_usuario", "")
                             )
@@ -181,15 +191,17 @@ class ControladorUsuario:
             nuevo = Usuario(nombre = datos.get("nombre", ""),
                             apellido = datos.get("apellido", ""),
                             alias = datos.get("alias", ""),
-                            password = datos.get("password", ""),
-                            estado = datos.get("estado", ""),
-                            id_usuario = datos.get("id_usuario", "")
+                            password = nuevopassword,
+                            estado = datos.get("estado", "Conectado"),
+                            id_usuario = datos.get("id_usuario", ""),
+                            correo = datos.get("correo", "")
                             )
         try:
+            
             Usuario.actualizar_usuario(nuevo)
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al momento de actualizar los datos del usuario con id={} en la base de datos.{}".format(nuevo.id_usuario, error))
-        return {"mensaje":"Se modifico con exito los datos del usuario con id={}.".format(nuevo.id_usuario)}, 200
+        return {"mensaje":"Se modifico con exito los datos del usuario con alias={}.".format(nuevo.alias)}, 200
 
     @classmethod
     def eliminar_usuario(cls, id_usuario: int):
@@ -234,3 +246,36 @@ class ControladorUsuario:
                 raise UsuarioNoEncontrado(description="El usuario con id={} no se encontro en la base de datos.".format(id_usuario))
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al en la base de datos al intetar obtener datos del usuario. {}".format(error))
+    
+    @classmethod
+    def show_profile(cls):
+        alias = session.get('alias')
+        try:
+            respuesta = Usuario.get_profile(alias)
+        except mysqlErrors as error:
+            raise DataBaseError(f"Se prodojo un error en la base de datos al intentar cargar los datos del usuario, con alias:{alias}. {error}")
+        return respuesta, 200
+    
+    @classmethod
+    def logout(cls):
+        session.pop('alias', None)
+        return {"message": "Sesion cerrada"}, 200
+    
+    @classmethod
+    def actualizar_foto(cls):
+        try:
+            
+            nueva_imagen = request.files['imagen'] if 'imagen' in request.files else None
+            id_usuario   = request.form.get('id_usuario')
+
+            if nueva_imagen:
+                ruta_imagen = os.path.join(Config.UPLOAD_FOLDER, f"{id_usuario}.jpg")
+                nueva_imagen.save(ruta_imagen)
+              
+                Usuario.actualizar_ruta(id_usuario, ruta_imagen)
+                
+                return jsonify({"mensage": "Imagen actualizada correctamente"}), 200
+            else:
+                return jsonify({"mensage": "No se proporcionó una nueva imagen"}), 400
+        except Exception as e:
+                return jsonify({"mesnage": str(e)}), 500

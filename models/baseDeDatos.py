@@ -5,13 +5,13 @@ from config import Config
 from datetime import datetime
 
 class BaseDeDatos:
-    _coneccion = None
+    _conexion = None
 
     @classmethod
     def conectarse(cls):
-        if cls._coneccion == None:
-            cls._coneccion = mysql.connector.connect(**Config._credenciales)
-        return cls._coneccion
+        if cls._conexion == None:
+            cls._conexion = mysql.connector.connect(**Config._credenciales)
+        return cls._conexion
     
     @classmethod
     def ejecutar_consulta(cls, consulta, parametros=None, formato=None, diccionario=False):
@@ -31,9 +31,11 @@ class BaseDeDatos:
                     cursor.execute(consulta, (parametros, ))
             except TypeError:
                 cursor.execute(consulta, (str(parametros), ))
+            
+                
         else:
             cursor.execute(consulta)
-        cls._coneccion.commit()
+        cls._conexion.commit()
         return cursor
     
     @classmethod
@@ -79,3 +81,6 @@ class BaseDeDatos:
         else:
             cursor.execute(consulta)
         return cursor.fetchall()
+    @classmethod
+    def cerrar_conexion(cls):
+        cls._conexion.close()

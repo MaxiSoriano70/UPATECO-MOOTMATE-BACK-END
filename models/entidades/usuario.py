@@ -3,8 +3,8 @@ from models.baseDeDatos import BaseDeDatos
 import hashlib  
 
 class Usuario:
-    def __init__(self, nombre:str, apellido:str, alias:str, correo:str,
-                 password:str, estado = 'conectado', codigo_verificacion:str = None, id_usuario:int = None):
+    def __init__(self, nombre:str, apellido:str, alias:str, correo=None,
+                 password:str = None, estado = 'conectado', codigo_verificacion:str = None, id_usuario:int = None):
         self.nombre = nombre
         self.apellido = apellido
         self.alias = alias
@@ -13,7 +13,8 @@ class Usuario:
         self.estado = estado
         self.codigo_verificacion = codigo_verificacion
         self.id_usuario = id_usuario
-    
+       
+        
     @classmethod
     def crear_usuario(cls, usuario):
         consulta = """INSERT INTO mootmate.usuarios
@@ -27,8 +28,11 @@ class Usuario:
                         usuario.password,
                         usuario.estado,
                         usuario.codigo_verificacion)
+        
         BaseDeDatos.ejecutar_consulta(consulta, parametros)
-    
+        
+        
+        
     @classmethod
     def verificar_usuario(cls, id_usuario):
         consulta = """UPDATE mootmate.usuarios as u SET u.verificado = 1, u.codigo_verificacion = NULL WHERE u.id_usuario = %s"""
@@ -68,8 +72,7 @@ class Usuario:
     @classmethod
     def get_usuarios(cls):
         consulta = """SELECT * FROM mootmate.usuarios"""
-        respuesta = BaseDeDatos.traer_todo(consulta=consulta,diccionario=True)
-        usuarios = list(respuesta)
+        usuarios = BaseDeDatos.traer_todo(consulta=consulta,diccionario=True)
         return usuarios
     
     @classmethod
@@ -77,20 +80,18 @@ class Usuario:
         consulta = """UPDATE mootmate.usuarios as u SET
         u.nombre = %s,
         u.apellido = %s,
-        u.alias = %s,
         u.correo = %s,
         u.password = %s,
         u.estado = %s,
         u.codigo_verificacion = %s
-        WHERE u.id_usuario = %s"""
+        WHERE u.alias = %s"""
         parametros = (  usuario.nombre,
                         usuario.apellido,
-                        usuario.alias,
                         usuario.correo,
                         usuario.password,
                         usuario.estado,
                         usuario.codigo_verificacion,
-                        usuario.id_usuario)
+                        usuario.alias)
         BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=parametros)
     
     @classmethod
@@ -140,3 +141,47 @@ class Usuario:
                   "codigo_verificacion": self.codigo_verificacion,
                   "id": self.id_usuario}
         return serial
+    
+    @classmethod
+    def is_registered(cls,usuario):
+        query = """select id_usuario from mootmate.usuarios WHERE alias = %s 
+                    and password = %s"""
+        params = (usuario.alias,usuario.password)
+        result = BaseDeDatos.traer_uno(query,parametros=params)
+
+        if result is not None:
+            return True
+        return False
+    
+    @classmethod
+    def existe_correo(cls, usuario):
+        consulta = "SELECT COUNT(*) FROM mootmate.usuarios WHERE correo = %s"
+        parametros = (usuario.correo,)
+        resultado = BaseDeDatos.traer_uno(consulta=consulta, parametros=parametros)
+
+        if resultado and resultado[0] > 0:
+            return True
+        else:
+            return False
+    @classmethod
+    def existe_alias(cls, usuario):
+        consulta = "SELECT COUNT(*) FROM mootmate.usuarios WHERE alias = %s"
+        parametros = (usuario.alias,)
+        resultado = BaseDeDatos.traer_uno(consulta=consulta, parametros=parametros)
+
+        if resultado and resultado[0] > 0:
+            return True
+        else:
+            return False
+    @classmethod
+    def get_profile(cls,alias):
+        consulta = """SELECT * FROM mootmate.usuarios WHERE alias = %s"""
+        parametros = (alias,)
+        resultado = BaseDeDatos.traer_uno(consulta=consulta, parametros=parametros, diccionario=True)
+        return resultado
+    @classmethod
+    def actualizar_ruta(cls,id,ruta):
+        consulta = """UPDATE mootmate.usuarios as u SET u.imagen = %s
+        WHERE u.id_usuario = %s"""
+        parametros =(ruta, id)
+        BaseDeDatos.ejecutar_consulta(consulta=consulta, parametros=parametros)

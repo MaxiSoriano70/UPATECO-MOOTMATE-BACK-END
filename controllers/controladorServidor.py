@@ -14,6 +14,7 @@ from controllers.controladorUsuario import ControladorUsuario
 class ControladorServidor:
     @classmethod
     def crear_servidor(cls):
+        datos = request.json
         #control nombre servidor
         if "nombre" not in datos:
             raise BadRequest("El nombre del servidor es obligatorio para su creacion.")
@@ -149,3 +150,13 @@ class ControladorServidor:
                 raise ServidorNoEncontrado("El servidor con id={} no se encontro en la base de datos.".format(id_servidor))
         except mysqlErrors as error:
             raise DataBaseError("Se produjo un error al intentar procesar la solicitud. {}".format(error))
+    
+    @classmethod
+    def existe_usuario_servidor(cls, id_servidor, id_usuario):
+        cls.control_existe_servidor(id_servidor)
+        try:
+            boleano = Servidor.existe_usuario_servidor(id_servidor =  id_servidor, id_usuario = id_usuario)
+        except mysqlErrors as error:
+            raise DataBaseError("Se produjo un error al intentar comprobar si el usuario pertenece al servidor.")
+        return {"mensaje":boleano}, 200
+        
